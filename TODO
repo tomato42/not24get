@@ -3,3 +3,6 @@
    increase or decrease numbers, add numbers to the back)
  * Use data from directory and check if parts of it are not used as password
    or  part of password
+ * Create program that can be used as a "check password script" in Samba,
+   otherwise Samba won't return proper message to workstation when password
+   change in LDAP fails
