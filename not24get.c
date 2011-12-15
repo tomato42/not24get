@@ -45,13 +45,15 @@ count_classes (char *password)
     {
       if (islower (*p))
 	lcase = 1;
-      else if (isupper (*p))
+      // ignore capital letter at the as the first character
+      else if (isupper (*p) && p != password)
 	ucase = 1;
-      else if (isdigit (*p))
+      // ignore digit as last character
+      else if (isdigit (*p) && *(p+1) != '\0')
 	digits = 1;
       else if (ispunct (*p))
 	punct = 1;
-      else if (!isspace (*p) && !iscntrl (*p))
+      else if (!iscntrl (*p) && isascii(*p))
 	other = 1;
       p++;
     }
