@@ -1,0 +1,5 @@
+ * Read configuration from file
+ * Remember past passwords (as sha22 hashes), do some combinations (change case,
+   increase or decrease numbers, add numbers to the back)
+ * Use data from directory and check if parts of it are not used as password
+   or  part of password

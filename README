@@ -1,2 +1,13 @@
 not24get is a module for password quality checking in OpenLDAP to be used
 together with ppolicy.
+
+It implements the API needed for use of library as a pwdCheckModule in ppolicy
+It also provides an executable that can be used as "check password script" in
+Samba suite.
+
+This module will check for quality of password based on similar rationale as
+there is behind the passwdqc PAM module or was shown in http://xkcd.com/936/
+
+A password composed of few random common words is easy to remember and safer
+than most passwords that get through the regular 3 out of 4 types of character
+sets rule.
