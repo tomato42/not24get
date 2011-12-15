@@ -1,3 +1,8 @@
+//#define DEBUG
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 #include <ldap.h>
 #include <string.h>
 #include <ctype.h>
@@ -158,6 +163,10 @@ check_password (char *pPasswd, char **ppErrStr, void *pEntry)
   if (pass_class >= 4)
     if (min_4class != -1 && pass_len >= min_4class)
       return LDAP_SUCCESS;
+
+#ifdef DEBUG
+  fprintf(stderr, "pass_class: %i\n", pass_class);
+#endif
 
   if (pass_class < 2)
     {
