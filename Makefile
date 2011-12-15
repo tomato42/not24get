@@ -15,3 +15,8 @@ libnot24get.so: not24get.c
 
 clean:
 	rm -rf *.o *.so not24get_check
+
+test: not24get_check
+	@echo "horse battery staple correct" > password.txt
+	@LD_LIBRARY_PATH=. ./not24get_check < password.txt && echo "test OK"
+	@rm password.txt
