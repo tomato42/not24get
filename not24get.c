@@ -145,6 +145,17 @@ check_password (char *pPasswd, char **ppErrStr, void *pEntry)
 
   int pass_class = count_classes (pPasswd);
 
+  int pass_words = count_words (pPasswd);
+
+#ifdef DEBUG
+  fprintf(stderr, "pass_words: %i\n", pass_words);
+#endif
+
+  // first check linguistic complexity
+  if (min_words != -1 && pass_words >= min_words)
+    return LDAP_SUCCESS;
+
+  // second, check character classes
   if (pass_class == 0)
     {
       *ppErrStr = strdup ("Password has no printable characters");
@@ -167,17 +178,6 @@ check_password (char *pPasswd, char **ppErrStr, void *pEntry)
 #ifdef DEBUG
   fprintf(stderr, "pass_class: %i\n", pass_class);
 #endif
-
-  if (pass_class < 2)
-    {
-      *ppErrStr = strdup ("Password too simple");
-      return FAILURE;
-    }
-
-  int pass_words = count_words (pPasswd);
-
-  if (min_words != -1 && pass_words >= min_words)
-    return LDAP_SUCCESS;
 
   *ppErrStr = strdup ("Password too simple");
   return FAILURE;
