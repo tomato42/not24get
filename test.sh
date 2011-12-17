@@ -5,7 +5,7 @@ export LD_LIBRARY_PATH=.
 test()
 {
   echo -n "$1" > /tmp/password.txt
-  ./not24get_check < /tmp/password.txt
+  ./not24get_test < /tmp/password.txt
   ret=$?
   rm /tmp/password.txt
   return $ret
