@@ -63,12 +63,57 @@
     <code>pwdCheckModule</code> does in LDAP.
   </p>
 
-  <h2>Downloads</h2>
+  <h2>Downloads and compilation</h2>
   <p>You can get the source code for those applications from
      <a href="https://github.com/tomato42/not24get">https://github.com/tomato42/not24get</a>
+     <br/>
+     To compile the code you will need the <a href="http://www.openwall.com/passwdqc/"><code>libpasswdqc</code></a> library
+     installed. To compile the code, run:
+     <pre>
+     git clone http://github.com/tomato42/not24get.git not24get
+     cd not24get
+     make
+     </pre>
   </p>
 
   <h2>Configuration</h2>
+  <h3>Config file</h3>
+  <p>The config file at this moment has the same directives as the <code>libpasswdqc</code> config files. Documentation
+     should be avaiable in passwdqc.conf(5).
+     The main difference is in location, not24get applications and modules look for config file in following locations:
+     <ul>
+        <li><code>/etc/samba/not24get.conf</code> (compilation configuration dependent)</li>
+        <li><code>/etc/ldap/not24get.conf</code></li>
+        <li><code>/etc/not24get.conf</code></li>
+        <li><code>/etc/ldap/passwdqc.conf</code></li>
+        <li><code>/etc/passwdqc.conf</code></li>
+     </ul>
+     So it is possible to enforce different password quality for local accounts using <code>pam_passwdqc</code> and
+     <code>not24get</code> modules.
+  </p>
+  <h3>OpenLDAP configuration</h3>
+  <p>First set up regular ppolicy module in OpenLDAP. After that, copy the <code>not24get.so</code> file to the OpenLDAP
+     module directory (usually <code>/usr/lib/openldap/</code>) and following entry to all policies in which you need:
+     <pre>
+     pwdCheckModule: not24get.so
+     </pre>
+  </p>
+  <h3>Samba configuration</h3>
+  <p>You can configure the Samba using two different ways, the first one is to use the <code>not24get_check</code> the
+     second one is to use <code>pwqcheck</code> from <code>libpasswdqc</code>.
+     If you use <code>pwqcheck</code>, you won't have the ability to use the different settings for local accounts and
+     domain accounts.
+  </p>
+     <h4>not24get_check configuration</h4>
+     In <code>/etc/samba/smb.conf</code>, global section, add following line:
+     <pre>
+     check password script = /usr/bin/not24get_check
+     </pre>
+     <h4>pwqcheck configuration</h4>
+     In <code>/etc/samba/smb.conf</code>, global section, add following line:
+     <pre>
+     check password script = /usr/bin/pwqcheck -1
+     </pre>
   <h3>Alternative Samba password check setting</h3>
   <p>
     With Samba you can also use the application included in documentation: <code>crackcheck</code>
