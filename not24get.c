@@ -23,7 +23,7 @@ int min_2class = 14;
 // characters
 int min_1class = -1;
 // minimume length of passwords meeting criteria for a passphrase
-int min_phrase = 16;
+int min_passphrase = 16;
 // minimum number of words in a password meeting criteria for a passphrase
 int min_words = 3;
 // maximum length of password
@@ -152,7 +152,7 @@ check_password (char *pPasswd, char **ppErrStr, void *pEntry)
 #endif
 
   // first check linguistic complexity
-  if (min_words != -1 && pass_words >= min_words)
+  if (min_words != -1 && pass_words >= min_words && pass_len >= min_passphrase)
     return LDAP_SUCCESS;
 
   // second, check character classes
