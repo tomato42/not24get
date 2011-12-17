@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+ 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+ 
+	<title>not24get</title>
+ 
+	<meta name="description" content="Collection of software to make password enforcement easy in OpenLDAP based domains" />
+	<meta name="keywords" content="OpenLDAP, LDAP, Samba, PAM, password, password policy, password strength checking" />
+ 
+	<!--<base href="" />-->
+ 
+	<!--ICON-->
+	<link rel="shortcut icon" href="icons/favicon.ico" />
+	<link rel="apple-touch-icon" href="icons/iphone-icon.png" />
+ 
+	<!--JS-->
+	<!--<link type="text/javascript" href="js/javascript.js" />-->
+ 
+	<!--STYLESHEET GALORE-->
+	<style type="text/css">
+		@import url(css/main.css);
+	</style>
+	<!--[if IE]>
+		<link rel="stylesheet" type="text/css" href="css/ie.css"/>
+	<![endif]-->
+</head>
+
+<body>
+
+ <h1>not24get - Collection of software and tips to make password quality enforcement easy</h1>
+ <h2>About</h2>
+ <ul>
+    <li>Module to do password quality checks on LDAP directory level, not on user application level.</li>
+    <li>Application to duplicate the quality checks for Samba as a work-around for a Samba bug</li> 
+    <li>Recommended configuration for Samba, PAM and OpenLDAP</li>
+ </ul>
+
+ <h2>Big picture and rationale</h2>
+ <p>Most OpenLDAP deployments are used as back ends for Samba, as NT-style Windows Domains.
+    While using LDAP directory as a back end for Samba is a very good idea, it also brings problems if our deployment
+    needs to be compliant with EU Data Protection directive, or similar local laws.
+    What this means, is that user set passwords need to have specific complexity.
+    It's done to avoid simple and easy to guess passwords, like "password", "sally" and so on.
+    Making Samba to enforce the complexity of the password is quite simple, one just need to use the <code>crackcheck</code>
+    application included in Samba documentation (read <b>Alternative Samba password check setting</b> below to know how).
+    The problem starts when other applications can authenticate with LDAP directory directly.
+    If one can connect directly to LDAP directory, one can change his password to anything he wants, default OpenLDAP
+    configuration won't enforce the password. We have exactly the same problem if there are regular UNIX servers in our
+    domain that use LDAP directly &ndash; we should allow the users to change their passwords using the <code>passwd</code>
+    command on any computer they can connect to and still have the complexity enforced.
+    The only way to do it safely, is to delegate the password checking to the LDAP server itself, use 
+    LDAP Password Modify Extended Operation (<a href="http://tools.ietf.org/html/rfc3062">RFC3062)</a>) for password change
+    and <code>slapo-ppolicy(5)</code> overlay together with <code>pwdCheckModule</code>.
+    This way, no matter where the change originates from, the password will have to meet the same complexity requirements.
+    Unfortunately, there's a bug in Samba, where if the password change in LDAP (or PAM for that matter) didn't succeed
+    the Domain Controller returns "Permission denied" message.
+    As can be imagined, this is quite confusing for users...
+    This means, that the script Samba uses for quality checks needs to duplicate the checks the
+    <code>pwdCheckModule</code> does in LDAP.
+  </p>
+
+  <h2>Downloads</h2>
+  <p>You can get the source code for those applications from
+     <a href="https://github.com/tomato42/not24get">https://github.com/tomato42/not24get</a>
+  </p>
+
+  <h2>Configuration</h2>
+  <h3>Alternative Samba password check setting</h3>
+  <p>
+    With Samba you can also use the application included in documentation: <code>crackcheck</code>
+    it should be in <code>examples/auth/crackcheck</code> folder in Samba documentation, available from
+    <code>samba-doc</code>package.
+    After compiling (or using the already compiled application if your distribution has one) you set the password options
+    in <code>smb.conf</code> like that:
+    <pre>
+    check password script = /usr/bin/crackcheck -c -d /usr/share/cracklib/pw_dict
+    </pre>
+  </p> 
+ 
+</body>
+</html>
