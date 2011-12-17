@@ -69,18 +69,19 @@
      <br/>
      To compile the code you will need the <a href="http://www.openwall.com/passwdqc/"><code>libpasswdqc</code></a> library
      installed. To compile the code, run:
+     </p>
      <pre>
      git clone http://github.com/tomato42/not24get.git not24get
      cd not24get
      make
      </pre>
-  </p>
 
   <h2>Configuration</h2>
   <h3>Config file</h3>
   <p>The config file at this moment has the same directives as the <code>libpasswdqc</code> config files. Documentation
      should be avaiable in passwdqc.conf(5).
      The main difference is in location, not24get applications and modules look for config file in following locations:
+     </p>
      <ul>
         <li><code>/etc/samba/not24get.conf</code> (compilation configuration dependent)</li>
         <li><code>/etc/ldap/not24get.conf</code></li>
@@ -88,43 +89,52 @@
         <li><code>/etc/ldap/passwdqc.conf</code></li>
         <li><code>/etc/passwdqc.conf</code></li>
      </ul>
+     <p>
      So it is possible to enforce different password quality for local accounts using <code>pam_passwdqc</code> and
      <code>not24get</code> modules.
-  </p>
+     </p>
   <h3>OpenLDAP configuration</h3>
   <p>First set up regular ppolicy module in OpenLDAP. After that, copy the <code>not24get.so</code> file to the OpenLDAP
      module directory (usually <code>/usr/lib/openldap/</code>) and following entry to all policies in which you need:
+     </p>
      <pre>
      pwdCheckModule: not24get.so
      </pre>
-  </p>
+     <p>
+     Moreover, you will need the <code>smbk5pwd</code> overlay working or the <code>pwdLastSet</code> won't be updated.
+     </p>
   <h3>Samba configuration</h3>
   <p>You can configure the Samba using two different ways, the first one is to use the <code>not24get_check</code> the
      second one is to use <code>pwqcheck</code> from <code>libpasswdqc</code>.
      If you use <code>pwqcheck</code>, you won't have the ability to use the different settings for local accounts and
      domain accounts.
   </p>
+  <p>To make Samba use LDAP Extended operation for password changing, you need to change following line:
+  </p>
+     <pre>
+     ldap passwd sync = only
+     </pre>
      <h4>not24get_check configuration</h4>
-     In <code>/etc/samba/smb.conf</code>, global section, add following line:
+     <p>In <code>/etc/samba/smb.conf</code>, global section, add following line:</p>
      <pre>
      check password script = /usr/bin/not24get_check
      </pre>
      <h4>pwqcheck configuration</h4>
-     In <code>/etc/samba/smb.conf</code>, global section, add following line:
+     <p>In <code>/etc/samba/smb.conf</code>, global section, add following line:</p>
      <pre>
      check password script = /usr/bin/pwqcheck -1
      </pre>
-  <h3>Alternative Samba password check setting</h3>
-  <p>
-    With Samba you can also use the application included in documentation: <code>crackcheck</code>
-    it should be in <code>examples/auth/crackcheck</code> folder in Samba documentation, available from
-    <code>samba-doc</code>package.
-    After compiling (or using the already compiled application if your distribution has one) you set the password options
-    in <code>smb.conf</code> like that:
-    <pre>
-    check password script = /usr/bin/crackcheck -c -d /usr/share/cracklib/pw_dict
-    </pre>
-  </p> 
+    <h4>Alternative Samba password check setting</h4>
+    <p>
+      With Samba you can also use the application included in documentation: <code>crackcheck</code>
+      it should be in <code>examples/auth/crackcheck</code> folder in Samba documentation, available from
+      <code>samba-doc</code>package.
+      After compiling (or using the already compiled application if your distribution has one) you set the password options
+      in <code>smb.conf</code> like that:
+      </p>
+      <pre>
+      check password script = /usr/bin/crackcheck -c -d /usr/share/cracklib/pw_dict
+      </pre>
  
 </body>
 </html>
