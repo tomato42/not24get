@@ -1,184 +1,103 @@
 //#define DEBUG
-#ifdef DEBUG
+#define _GNU_SOURCE
 #include <stdio.h>
-#endif
-
+#include <stdlib.h>
 #include <ldap.h>
 #include <string.h>
 #include <ctype.h>
+#include <passwdqc.h>
 #include "ppolicy.h"
+
+#define CONFIG_DIRECTIVE "config=" CONFIG_FILE
 
 #define FAILURE 0x01
 
-// hardcoded ultimate maximum length of password
+// hardcoded ultimate maximum length of password (for overflow checking)
 #define MAX_LENGTH 1024
 
-// minumum length of passwords having characters from 4 classes of characters
-int min_4class = 10;
-// minimum length of passwords having characters from 3 classes of characters
-int min_3class = 12;
-// minimum length of passwords having characters from 2 classes of characters 
-int min_2class = 14;
-// minimum length of passwords having characters from single class of
-// characters
-int min_1class = -1;
-// minimume length of passwords meeting criteria for a passphrase
-int min_passphrase = 16;
-// minimum number of words in a password meeting criteria for a passphrase
-int min_words = 3;
-// maximum length of password
-int max_len = 40;
-
 int
-read_config ()
+read_config (passwdqc_params_t *params)
 {
-  return LDAP_SUCCESS;
-}
+  // reason for parsing failure
+  char *parse_reason;
+  // saved first error
+  char *err_reason = NULL;
+  // default config file locations
+  const char *const config[] = {CONFIG_DIRECTIVE,
+                                "config=/etc/ldap/not24get.conf",
+                                "config=/etc/not24get.conf",
+                                "config=/etc/ldap/passwdqc.conf",
+                                "config=/etc/passwdqc.conf",
+                                NULL};
 
-int
-count_classes (char *password)
-{
-  int lcase = 0;
-  int ucase = 0;
-  int digits = 0;
-  int punct = 0;
-  int other = 0;
+  passwdqc_params_reset(params);
 
-  char *p = password;
-
-  while (*p != '\0')
+  int i=0;
+  while (config[i] != NULL)
     {
-      if (islower (*p))
-	lcase = 1;
-      // ignore capital letter at the as the first character
-      else if (isupper (*p) && p != password)
-	ucase = 1;
-      // ignore digit as last character
-      else if (isdigit (*p) && *(p+1) != '\0')
-	digits = 1;
-      else if (ispunct (*p))
-	punct = 1;
-      else if (!iscntrl (*p) && isascii(*p))
-	other = 1;
-      p++;
+      if (passwdqc_params_parse(params, &parse_reason, 1,
+            &config[i]))
+        {
+          if (!err_reason)
+            err_reason = strdup((parse_reason)?parse_reason:"Out of memory");
+          free(parse_reason);
+          i++;
+          continue;
+        }
+      else
+        {
+          // failback location worked fine, we won't be needing this error
+          // message
+          if (err_reason)
+            free(err_reason);
+
+          return 0;
+        }
     }
 
-  return lcase + ucase + digits + punct + other;
-}
-
-// count number of "words" in password, where word is an alpha sequence of
-// at least 3 characters
-int
-count_words (char *password)
-{
-  int words = 0;
-  int word_len = 0;
-  int is_word = 0;
-  char *p;
-
-  for (p = password; *p != '\0'; p++)
-    {
-      // word just started
-      if (isalpha (*p) && !is_word)
-	{
-	  is_word = 1;
-	  word_len = 1;
-	  continue;
-	}
-
-      // word just ended
-      if (!isalpha (*p) && is_word)
-	{
-	  is_word = 0;
-	  if (word_len >= 3)
-	    words++;
-	  word_len = 0;
-	  continue;
-	}
-
-      // word is in progress, count letters
-      if (isalpha (*p) && is_word)
-	{
-	  word_len++;
-	  continue;
-	}
-
-      // no word in progress, just continue
-    }
-
-  if (is_word && word_len >= 3)
-    words++;
-
-  return words;
+  fprintf(stderr, "not24get: %s\n", err_reason);
+  free(err_reason);
+  return 1;
 }
 
 int
 check_password (char *pPasswd, char **ppErrStr, void *pEntry)
 {
   *ppErrStr = NULL;
+  passwdqc_params_t params;
+  const char *check_reason;
 
-  if (!pPasswd)
+  // check for invalid arguments
+  if (!pPasswd || !ppErrStr)
     {
       *ppErrStr = strdup ("Null password");
       return FAILURE;
     }
 
-  if (read_config ())
+  if (read_config (&params))
     {
-      *ppErrStr = strdup ("Internal error");
+      *ppErrStr = strdup ("Internal error, can't read config");
       return FAILURE;
     }
 
-  int pass_len = strnlen (pPasswd, MAX_LENGTH);
-
-  if (pass_len == MAX_LENGTH || pass_len >= max_len)
+  // check for buffer oveflow
+  if (MAX_LENGTH == strnlen (pPasswd, MAX_LENGTH))
     {
       *ppErrStr = strdup ("Password too long");
       return FAILURE;
     }
 
-  if (pass_len <= 6)
-    {
-      *ppErrStr = strdup ("Password REALLY short");
-      return FAILURE;
-    }
+  // perform actual password checking, third param is old password,
+  // fourth param is passwd entry
+  // TODO convert pEntry to struct passwd, pass as 4h parameter
+  check_reason = passwdqc_check(&params.qc, pPasswd, NULL, NULL);
 
-  int pass_class = count_classes (pPasswd);
-
-  int pass_words = count_words (pPasswd);
-
-#ifdef DEBUG
-  fprintf(stderr, "pass_words: %i\n", pass_words);
-#endif
-
-  // first check linguistic complexity
-  if (min_words != -1 && pass_words >= min_words && pass_len >= min_passphrase)
+  if (!check_reason)
     return LDAP_SUCCESS;
 
-  // second, check character classes
-  if (pass_class == 0)
+  if (asprintf(ppErrStr, "Bad password (%s)", check_reason) == -1)
     {
-      *ppErrStr = strdup ("Password has no printable characters");
-      return FAILURE;
+      *ppErrStr = strdup("Internal error, asprintf failed");
     }
-
-  if (pass_class >= 1)
-    if (min_1class != -1 && pass_len >= min_1class)
-      return LDAP_SUCCESS;
-  if (pass_class >= 2)
-    if (min_2class != -1 && pass_len >= min_2class)
-      return LDAP_SUCCESS;
-  if (pass_class >= 3)
-    if (min_3class != -1 && pass_len >= min_3class)
-      return LDAP_SUCCESS;
-  if (pass_class >= 4)
-    if (min_4class != -1 && pass_len >= min_4class)
-      return LDAP_SUCCESS;
-
-#ifdef DEBUG
-  fprintf(stderr, "pass_class: %i\n", pass_class);
-#endif
-
-  *ppErrStr = strdup ("Password too simple");
   return FAILURE;
 }

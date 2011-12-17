@@ -22,7 +22,7 @@ main (int argc, char **argv)
   if (ret == 0)
     return 0;
 
-  fprintf(stderr, "ERR - %s", err);
+  fprintf(stderr, "ERR - %s\n", err);
   free(err);
 
   return ret;

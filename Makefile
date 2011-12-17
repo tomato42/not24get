@@ -1,4 +1,4 @@
-CFLAGS = -Wall -W
+CFLAGS = -Wall -W -lpasswdqc
 CFLAGS_lib = $(CFLAGS) -fPIC
 
 OBJS_LIB = libnot24get.so not24get_check
@@ -10,7 +10,7 @@ not24get_check: not24get_check.c libnot24get.so
 	$(CC) $(CFLAGS) -L. not24get_check.c -lnot24get -o not24get_check
 
 libnot24get.so: not24get.c
-	$(CC) -shared $(CFLAGS_lib) not24get.c -o libnot24get.so
+	$(CC) -shared $(CFLAGS_lib) -DCONFIG_FILE=\"./not24get.conf\" not24get.c -o libnot24get.so
 	cp libnot24get.so not24get.so
 
 clean:
