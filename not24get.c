@@ -34,8 +34,8 @@
 // hardcoded ultimate maximum length of password (for overflow checking)
 #define MAX_LENGTH 1024
 
-int
-read_config (passwdqc_params_t *params)
+static int
+read_config_file (passwdqc_params_t *params)
 {
   // reason for parsing failure
   char *parse_reason;
@@ -93,7 +93,7 @@ check_password (char *pPasswd, char **ppErrStr, void *pEntry)
       return FAILURE;
     }
 
-  if (read_config (&params))
+  if (read_config_file (&params))
     {
       *ppErrStr = strdup ("Internal error, can't read config");
       return FAILURE;
