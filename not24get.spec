@@ -1,12 +1,11 @@
 Name:		not24get
-Version:	0.1
-Release:	2%{?dist}
+Version:	0.2
+Release:	1%{?dist}
 Summary:	not24get is a module for password quality checking in OpenLDAP to be used together with ppolicy.
 
 License:	GPL
 URL:		https://github.com/tomato42/not24get
-Source0:	not24get-0.1.tar.gz
-Source1:	not24get.conf
+Source0:	not24get-0.2.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:	passwdqc-devel openldap-devel
@@ -44,7 +43,7 @@ mkdir -p %{buildroot}/etc/
 install -p -m 755 %{_builddir}/%{name}-%{version}/libnot24get.so %{buildroot}/usr/lib64/openldap/libnot24get.so
 install -p -m 755 %{_builddir}/%{name}-%{version}/not24get_check %{buildroot}/usr/lib64/openldap/not24get_check
 install -p -m 755 %{_builddir}/%{name}-%{version}/not24get.so %{buildroot}/usr/lib64/openldap/not24get.so
-install -p -m 644 %{SOURCE1} %{buildroot}/etc/not24get.conf
+install -p -m 644 %{_builddir}/%{name}-%{version}/not24get.conf %{buildroot}/etc/not24get.conf
 
 
 %clean
@@ -61,5 +60,8 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Tue May 16 2017 Mozilla <kang@mozilla.com> - 1.0-2
+* Tue May 16 2017 Mozilla <kang@mozilla.com> - 0.2-1
+- Use a Mozilla packaged release of the master branch (called 0.2)
+
+* Tue May 16 2017 Mozilla <kang@mozilla.com> - 0.1-2
 - Ported from internal Mozilla spec file
