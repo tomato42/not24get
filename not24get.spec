@@ -41,7 +41,7 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/lib64/openldap/
 mkdir -p %{buildroot}/etc/
 install -p -m 755 %{_builddir}/%{name}-%{version}/libnot24get.so %{buildroot}/usr/lib64/openldap/libnot24get.so
-install -p -m 755 %{_builddir}/%{name}-%{version}/not24get_check %{buildroot}/usr/lib64/openldap/not24get_check
+install -p -m 755 %{_builddir}/%{name}-%{version}/not24get_check %{buildroot}/usr/bin/not24get_check
 install -p -m 755 %{_builddir}/%{name}-%{version}/not24get.so %{buildroot}/usr/lib64/openldap/not24get.so
 install -p -m 644 %{_builddir}/%{name}-%{version}/not24get.conf %{buildroot}/etc/not24get.conf
 
